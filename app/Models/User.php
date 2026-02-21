@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use RuntimeException;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -20,6 +21,27 @@ class User extends Authenticatable
      * @var string
      */
     protected $table = 'gvausers';
+
+    /**
+     * The primary key associated with the table.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'gvauser_id';
+
+    /**
+     * The data type of the primary key.
+     *
+     * @var string
+     */
+    protected $keyType = 'int';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = true;
 
     /**
      * The attributes that are mass assignable.
@@ -44,10 +66,14 @@ class User extends Authenticatable
 
     public function hasValidPassword(string $plainPassword): bool
     {
-        if (Hash::check($plainPassword, $this->password)) {
+        if (hash_equals(strtolower($this->password), md5($plainPassword))) {
             return true;
         }
 
-        return hash_equals(strtolower($this->password), md5($plainPassword));
+        try {
+            return Hash::check($plainPassword, $this->password);
+        } catch (RuntimeException) {
+            return false;
+        }
     }
 }
